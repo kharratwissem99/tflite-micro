@@ -150,10 +150,12 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
 }
 
 int main(int argc, char* argv[]) {
+  MicroPrintf("~~~EXECUTION STARTED~~~\n");
   tflite::InitializeTarget();
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
   TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
   TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
+  MicroPrintf("~~~WISSEM HOW ARE YOU~~~\n");
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
   return kTfLiteOk;
 }
