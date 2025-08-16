@@ -120,7 +120,7 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
 
   // Arena size just a round number. The exact arena usage can be determined
   // using the RecordingMicroInterpreter.
-  constexpr int kTensorArenaSize = 3000;
+  constexpr int kTensorArenaSize = 6000000;
   uint8_t tensor_arena[kTensorArenaSize];
 
   tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
@@ -129,16 +129,22 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
 
   // Check if the predicted output is within a small range of the
   // expected output
-  float epsilon = 0.05f;
-  constexpr int kNumTestValues = 4;
-  float golden_inputs[kNumTestValues] = {0.f, 1.f, 3.f, 5.f};
+  // float epsilon = 0.05f; // Normally don't needed, when doing a classification
+  // constexpr int kNumTestValues = 4; 
+  // float golden_inputs[kNumTestValues] = {0.f, 1.f, 3.f, 5.f}; // We need to pass a complete image instead
 
-  for (int i = 0; i < kNumTestValues; ++i) {
-    interpreter.input(0)->data.f[0] = golden_inputs[i];
-    TF_LITE_ENSURE_STATUS(interpreter.Invoke());
-    float y_pred = interpreter.output(0)->data.f[0];
-    TFLITE_CHECK_LE(abs(sin(golden_inputs[i]) - y_pred), epsilon);
-  }
+  // for (int i = 0; i < kNumTestValues; ++i) {
+  //   interpreter.input(0)->data.f[0] = golden_inputs[i];
+  //   TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+  //   float y_pred = interpreter.output(0)->data.f[0];
+  //   TFLITE_CHECK_LE(abs(sin(golden_inputs[i]) - y_pred), epsilon);
+  // }
+
+  // TODOs:
+  // pass the Input: // 224x224x3 image to the interpreter.input(0)->data.f
+  //   TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+  // get the prediction
+  // optional: compare with an expected value for a successful test
 
   return kTfLiteOk;
 }
@@ -169,26 +175,26 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   TfLiteTensor* output = interpreter.output(0);
   TFLITE_CHECK_NE(output, nullptr);
 
-  float output_scale = output->params.scale;
-  int output_zero_point = output->params.zero_point;
+  // float output_scale = output->params.scale;
+  // int output_zero_point = output->params.zero_point;
 
   // Check if the predicted output is within a small range of the
   // expected output
-  float epsilon = 0.05;
+  // float epsilon = 0.05;
 
-  constexpr int kNumTestValues = 4;
-  float golden_inputs_float[kNumTestValues] = {0.77, 1.57, 2.3, 3.14};
+  // constexpr int kNumTestValues = 4;
+  // float golden_inputs_float[kNumTestValues] = {0.77, 1.57, 2.3, 3.14};
 
   // The int8 values are calculated using the following formula
   // (golden_inputs_float[i] / input->params.scale + input->params.zero_point)
-  int8_t golden_inputs_int8[kNumTestValues] = {-96, -63, -34, 0};
+  // int8_t golden_inputs_int8[kNumTestValues] = {-96, -63, -34, 0};
 
-  for (int i = 0; i < kNumTestValues; ++i) {
-    input->data.int8[0] = golden_inputs_int8[i];
-    TF_LITE_ENSURE_STATUS(interpreter.Invoke());
-    float y_pred = (output->data.int8[0] - output_zero_point) * output_scale;
-    TFLITE_CHECK_LE(abs(sin(golden_inputs_float[i]) - y_pred), epsilon);
-  }
+  // for (int i = 0; i < kNumTestValues; ++i) {
+  //   input->data.int8[0] = golden_inputs_int8[i];
+  //   TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+  //   float y_pred = (output->data.int8[0] - output_zero_point) * output_scale;
+  //   TFLITE_CHECK_LE(abs(sin(golden_inputs_float[i]) - y_pred), epsilon);
+  // }
 
   return kTfLiteOk;
 }
