@@ -28,6 +28,7 @@ limitations under the License.
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
+#include "input_data.h"
 
 //needed
 namespace {
@@ -146,6 +147,28 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
   // get the prediction
   // optional: compare with an expected value for a successful test
 
+  TfLiteTensor* input = interpreter.input(0);
+  for (int h = 0; h < 224; ++h) {
+    for (int w = 0; w < 224; ++w) {
+      for (int c = 0; c < 3; ++c) {
+        int index = h * 224 * 3 + w * 3 + c;  // Flattened index
+        input->data.f[index] = g_image_array[index];  // Example: Set all pixels to 0.5
+      }
+    }
+  }
+
+  TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+  TfLiteTensor* output = interpreter.output(0);
+  TFLITE_CHECK_NE(output, nullptr);
+  TFLITE_CHECK_EQ(output->dims->size, 2);  // Ensure it's 2D
+  TFLITE_CHECK_EQ(output->dims->data[0], 1);  // batch
+  TFLITE_CHECK_EQ(output->dims->data[1], 43);  // Height
+
+  // Print the output values
+  for (int i = 0; i < 43; ++i) {
+    MicroPrintf("Output[%d]: %f\n", i, static_cast<double>(output->data.f[i]));
+  }
+
   return kTfLiteOk;
 }
 
@@ -203,7 +226,7 @@ int main(int argc, char* argv[]) {
   MicroPrintf("~~~EXECUTION STARTED~~~\n");
   tflite::InitializeTarget();
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
-  // TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
+  TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
   // TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
   MicroPrintf("~~~WISSEM HOW ARE YOU~~~\n");
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
