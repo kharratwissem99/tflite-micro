@@ -14,7 +14,7 @@ test_image = np.expand_dims(img, axis=0).astype(np.float32)
 print(test_image)
 
 # Normalize the pixel values to [0.0, 1.0] (for float models)
-# image_array /= 255.0 # needed later
+image_array /= 255.0 # needed later
 
 # Flatten the array (if needed) and save it as a binary file
 image_array = test_image.flatten()
