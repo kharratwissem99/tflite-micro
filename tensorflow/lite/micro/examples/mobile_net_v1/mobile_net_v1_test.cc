@@ -29,6 +29,8 @@ limitations under the License.
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "input_data.h"
+#include "labels.h"  // Generated from label.json
+#include "map_labels.h"  // to map the predicted labels
 
 //needed
 namespace {
@@ -164,10 +166,19 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
   TFLITE_CHECK_EQ(output->dims->data[0], 1);  // batch
   TFLITE_CHECK_EQ(output->dims->data[1], 43);  // Height
 
+  int max_index = 0;
+  float max_value = 0.0f;
   // Print the output values
   for (int i = 0; i < 43; ++i) {
+    if (output->data.f[i] > max_value) {
+      max_index = i;
+      max_value = output->data.f[i];
+    }
     MicroPrintf("Output[%d]: %f\n", i, static_cast<double>(output->data.f[i]));
   }
+
+  MicroPrintf("Predicted index: %d\n", g_labels_array[max_index]);
+  MicroPrintf("Prediction: %s\n", g_map_labels_array[g_labels_array[max_index]]);
 
   return kTfLiteOk;
 }

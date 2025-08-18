@@ -2,11 +2,13 @@ MOBILE_NET_V1_TEST_SRCS := \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/mobile_net_v1_test.cc \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/input_data.cc \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/labels.cc \
+$(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/map_labels.cc \
 
 MOBILE_NET_V1_SRCS := \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/mobile_net_v1_test.cc \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/input_data.cc \
 $(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/labels.cc \
+$(TENSORFLOW_ROOT)tensorflow/lite/micro/examples/mobile_net_v1/map_labels.cc \
 
 MOBILE_NET_V1_HDRS :=
 
