@@ -195,7 +195,7 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
 
   // Arena size just a round number. The exact arena usage can be determined
   // using the RecordingMicroInterpreter.
-  constexpr int kTensorArenaSize = 3000;
+  constexpr int kTensorArenaSize = 2000000;
   uint8_t tensor_arena[kTensorArenaSize];
 
   tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
@@ -209,8 +209,8 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   TfLiteTensor* output = interpreter.output(0);
   TFLITE_CHECK_NE(output, nullptr);
 
-  // float output_scale = output->params.scale;
-  // int output_zero_point = output->params.zero_point;
+  //float output_scale = output->params.scale;
+  //int output_zero_point = output->params.zero_point;
 
   // Check if the predicted output is within a small range of the
   // expected output
@@ -230,6 +230,36 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   //   TFLITE_CHECK_LE(abs(sin(golden_inputs_float[i]) - y_pred), epsilon);
   // }
 
+
+  for (int h = 0; h < 224; ++h) {
+    for (int w = 0; w < 224; ++w) {
+      for (int c = 0; c < 3; ++c) {
+        int index = h * 224 * 3 + w * 3 + c;  // Flattened index
+        input->data.int8[index] = g_image_array[index] / input->params.scale + input->params.zero_point; //should be an integer??
+      }
+    }
+  }
+
+  TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+  TFLITE_CHECK_NE(output, nullptr);
+  TFLITE_CHECK_EQ(output->dims->size, 2);  // Ensure it's 2D
+  TFLITE_CHECK_EQ(output->dims->data[0], 1);  // batch
+  TFLITE_CHECK_EQ(output->dims->data[1], 43);  // Height
+
+  int max_index = 0;
+  float max_value = 0.0f;
+  // Print the output values
+  for (int i = 0; i < 43; ++i) {
+    if (output->data.f[i] > max_value) {
+      max_index = i;
+      max_value = output->data.f[i];
+    }
+    MicroPrintf("Output[%d]: %f\n", i, static_cast<double>(output->data.f[i]));
+  }
+
+  MicroPrintf("Predicted index: %d\n", g_labels_array[max_index]);
+  MicroPrintf("Prediction: %s\n", g_map_labels_array[g_labels_array[max_index]]);
+
   return kTfLiteOk;
 }
 
@@ -238,7 +268,7 @@ int main(int argc, char* argv[]) {
   tflite::InitializeTarget();
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
   TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
-  // TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
+  //TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
   MicroPrintf("~~~WISSEM HOW ARE YOU~~~\n");
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
   return kTfLiteOk;
