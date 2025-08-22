@@ -44,6 +44,24 @@ TfLiteStatus RegisterOps(MobileNetV1OpResolver& op_resolver) {
   TF_LITE_ENSURE_STATUS(op_resolver.AddSoftmax());
   return kTfLiteOk;
 }
+
+
+}  // namespace
+
+namespace {
+using MobileNetV1OpResolver2 = tflite::MicroMutableOpResolver<6>;
+
+TfLiteStatus RegisterOps2(MobileNetV1OpResolver2& op_resolver) {
+  TF_LITE_ENSURE_STATUS(op_resolver.AddFullyConnected());
+  TF_LITE_ENSURE_STATUS(op_resolver.AddConv2D());
+  TF_LITE_ENSURE_STATUS(op_resolver.AddDepthwiseConv2D());
+  TF_LITE_ENSURE_STATUS(op_resolver.AddMean());
+  TF_LITE_ENSURE_STATUS(op_resolver.AddSoftmax());
+  TF_LITE_ENSURE_STATUS(op_resolver.AddQuantize());
+  return kTfLiteOk;
+}
+
+
 }  // namespace
 
 /*
@@ -190,8 +208,8 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
       ::tflite::GetModel(g_mobile_net_v1_int8_model_data);
   TFLITE_CHECK_EQ(model->version(), TFLITE_SCHEMA_VERSION);
 
-  MobileNetV1OpResolver op_resolver;
-  TF_LITE_ENSURE_STATUS(RegisterOps(op_resolver));
+  MobileNetV1OpResolver2 op_resolver;
+  TF_LITE_ENSURE_STATUS(RegisterOps2(op_resolver));
 
   // Arena size just a round number. The exact arena usage can be determined
   // using the RecordingMicroInterpreter.
@@ -230,12 +248,14 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   //   TFLITE_CHECK_LE(abs(sin(golden_inputs_float[i]) - y_pred), epsilon);
   // }
 
+  float output_scale = output->params.scale;
+  int output_zero_point = output->params.zero_point;
 
   for (int h = 0; h < 224; ++h) {
     for (int w = 0; w < 224; ++w) {
       for (int c = 0; c < 3; ++c) {
         int index = h * 224 * 3 + w * 3 + c;  // Flattened index
-        input->data.int8[index] = g_image_array[index] / input->params.scale + input->params.zero_point; //should be an integer??
+        input->data.uint8[index] = g_image_array[index] / input->params.scale + input->params.zero_point; //should be an integer??
       }
     }
   }
@@ -250,11 +270,11 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   float max_value = 0.0f;
   // Print the output values
   for (int i = 0; i < 43; ++i) {
-    if (output->data.f[i] > max_value) {
+    if ((output->data.uint8[i] - output_zero_point) * output_scale > max_value) {
       max_index = i;
-      max_value = output->data.f[i];
+      max_value = (output->data.uint8[i] - output_zero_point) * output_scale;
     }
-    MicroPrintf("Output[%d]: %f\n", i, static_cast<double>(output->data.f[i]));
+    MicroPrintf("Output[%d]: %f\n", i, static_cast<double>((output->data.uint8[i] - output_zero_point) * output_scale));
   }
 
   MicroPrintf("Predicted index: %d\n", g_labels_array[max_index]);
@@ -268,8 +288,7 @@ int main(int argc, char* argv[]) {
   tflite::InitializeTarget();
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
   TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
-  //TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
-  MicroPrintf("~~~WISSEM HOW ARE YOU~~~\n");
+  TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
   return kTfLiteOk;
 }
