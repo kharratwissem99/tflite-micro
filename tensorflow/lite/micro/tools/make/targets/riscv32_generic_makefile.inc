@@ -33,9 +33,11 @@ CXXFLAGS += $(PLATFORM_FLAGS) \
   -fpermissive \
   -fno-use-cxa-atexit \
   -DTF_LITE_USE_GLOBAL_MIN \
-  -DTF_LITE_USE_GLOBAL_MAX
+  -DTF_LITE_USE_GLOBAL_MAX \
+  -v  # Verbose output for the compiler
 
-CCFLAGS += $(PLATFORM_FLAGS)
+CCFLAGS += $(PLATFORM_FLAGS) \
+  -v  # Verbose output for the compiler
 
 BUILD_TYPE := micro
 
@@ -53,6 +55,8 @@ CXXFLAGS += $(RISCV_EXTRA_CFLAGS)
 # This disables the "linker relaxation" optimization, which produced incorrect code.
 # TODO(b/279805615): Check whether this is fixed in newer versions of the toolchain.
 LDFLAGS += -mno-relax
+LDFLAGS += -Tl110_memory.ld
+LDFLAGS += -v  # Verbose output for the linker
 TEST_SCRIPT := $(TENSORFLOW_ROOT)tensorflow/lite/micro/testing/test_with_qemu.sh riscv32 rv32
 SIZE_SCRIPT := ${TENSORFLOW_ROOT}tensorflow/lite/micro/testing/size_riscv32_binary.sh
 
