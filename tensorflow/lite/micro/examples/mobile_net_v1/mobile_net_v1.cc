@@ -51,7 +51,7 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
 
   // Arena size just a round number. The exact arena usage can be determined
   // using the RecordingMicroInterpreter.
-  constexpr int kTensorArenaSize = 2000000;
+  constexpr int kTensorArenaSize = 450000;
   uint8_t tensor_arena[kTensorArenaSize];
 
   tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
