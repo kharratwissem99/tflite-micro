@@ -51,7 +51,7 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
 
   // Arena size just a round number. The exact arena usage can be determined
   // using the RecordingMicroInterpreter.
-  constexpr int kTensorArenaSize = 450000;
+  constexpr int kTensorArenaSize = 65000;
   uint8_t tensor_arena[kTensorArenaSize];
 
   tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
@@ -68,10 +68,10 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   float output_scale = output->params.scale;
   int output_zero_point = output->params.zero_point;
 
-  for (int h = 0; h < 224; ++h) {
-    for (int w = 0; w < 224; ++w) {
+  for (int h = 0; h < 64; ++h) {
+    for (int w = 0; w < 64; ++w) {
       for (int c = 0; c < 3; ++c) {
-        int index = h * 224 * 3 + w * 3 + c;  // Flattened index
+        int index = h * 64 * 3 + w * 3 + c;  // Flattened index
         input->data.uint8[index] = g_image_array[index] / input->params.scale + input->params.zero_point; //should be an integer??
       }
     }

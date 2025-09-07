@@ -5,7 +5,7 @@ import numpy as np
 # Load the .png image
 # image = Image.open("/home/wissemkharrat/repos/tflite-micro/tensorflow/lite/micro/examples/mobile_net_v1/testdata/stopsign.png").convert("RGB")
 
-img = tf.keras.utils.load_img("tensorflow/lite/micro/examples/mobile_net_v1/testdata/image.png", target_size=(224, 224))
+img = tf.keras.utils.load_img("tensorflow/lite/micro/examples/mobile_net_v1/testdata/image.png", target_size=(64, 64))
 # Resize the image to 224x224 (or the required size for your model)
 # image = image.resize((224, 224))
 test_image = np.expand_dims(img, axis=0).astype(np.float32)
